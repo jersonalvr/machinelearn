@@ -1,23 +1,27 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 def show_github():
-    # Redirect to GitHub repository using HTML
-    st.markdown(
-        '''
-        <meta http-equiv="refresh" content="0;url=https://github.com/jersonalvr/machinelearning" target="_blank">
-        <p>Redirigiendo a GitHub...</p>
-        ''',
-        unsafe_allow_html=True
-    )
+    # Título de la sección
+    st.markdown("### Repositorio de GitHub")
     
-    # Alternative: Display a link with instructions
+    # HTML y CSS para un iframe responsivo
+    github_iframe = """
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+        <iframe 
+            src="https://github.com/jersonalvr/machinelearn" 
+            style="position: absolute; top:0; left: 0; width: 100%; height: 100%;" 
+            frameborder="0" 
+            scrolling="yes">
+        </iframe>
+    </div>
+    """
+    
+    # Renderizar el HTML responsivo
+    components.html(github_iframe, height=600, scrolling=True)
+    
+    # Enlace directo como respaldo
     st.markdown(
-        '''
-        ### Repositorio de GitHub
-        
-        Si no fuiste redirigido automáticamente, haz clic en el siguiente enlace:
-        
-        [Ver código fuente en GitHub ↗](https://github.com/jersonalvr/machinelearning)
-        ''',
+        "[Abrir repositorio en una nueva pestaña ↗](https://github.com/jersonalvr/machinelearn)",
         unsafe_allow_html=True
     )
