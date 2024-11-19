@@ -77,6 +77,8 @@ with st.sidebar:
     st.sidebar.markdown(
         f'''
         <div style="text-align: center; margin-bottom: 20px;">
+            <a href="https://jersonalvr.shinyapps.io/prophet/" target="_blank" style="text-decoration: none; color: inherit;">Analizar series temporales</a>
+            <br></br>
             Elaborado por 
             <a href="https://www.linkedin.com/in/jersonalvr" target="_blank" style="text-decoration: none; color: inherit;">
                 <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" width="20" style="vertical-align: middle; margin-right: 5px;"/>
