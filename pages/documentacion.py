@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-def show_github():
+def show_documentacion():
     # Título de la sección
     st.markdown("### Repositorio de GitHub")
     
