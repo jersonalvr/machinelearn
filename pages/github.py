@@ -9,7 +9,7 @@ def show_github():
     github_iframe = """
     <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
         <iframe 
-            src="https://github.com/jersonalvr/machinelearn" 
+            src="https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf" 
             style="position: absolute; top:0; left: 0; width: 100%; height: 100%;" 
             frameborder="0" 
             scrolling="yes">
