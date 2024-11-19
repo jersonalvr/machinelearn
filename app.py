@@ -10,7 +10,7 @@ from pages.upload import show_upload
 from pages.prepare import show_prepare
 from pages.train import show_train
 from pages.test import show_test
-from pages.github import show_github
+from pages.documentacion import show_documentacion
 
 # Configuración inicial
 st.set_page_config(initial_sidebar_state="collapsed", page_title="Machine Learning", page_icon="🤖",layout="wide")
@@ -88,7 +88,7 @@ with st.sidebar:
     )
 
 # Resto del código de navegación
-pages = ["Upload", "Prepare", "Training", "Test", "Github"]
+pages = ["Upload", "Prepare", "Training", "Test", "Documentacion"]
 styles = {
     "nav": {
         "background-color": "rgb(33, 216, 160)",
@@ -127,5 +127,5 @@ elif st.session_state.current_page == "Training":
     show_train()
 elif st.session_state.current_page == "Test":
     show_test()
-elif st.session_state.current_page == "Github":
-    show_github()
+elif st.session_state.current_page == "Documentacion":
+    show_documentacion()
