@@ -293,25 +293,17 @@ def show_train():
                 'Árbol de Decisión': {
                     'model': DecisionTreeRegressor(),
                     'params': {
-                        'max_depth': [3, 5, 7, 10, 15, None],
-                        'min_samples_split': [2, 5, 10, 20],
-                        'min_samples_leaf': [1, 2, 4, 8],
-                        'criterion': ['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
-                        'splitter': ['best', 'random'],
-                        'max_features': ['sqrt', 'log2', None]
+                        'max_depth': [3, 5, 7, 10, None],
+                        'min_samples_split': [2, 5, 10],
+                        'min_samples_leaf': [1, 2, 4]
                     }
                 },
                 'Random Forest': {
                     'model': RandomForestRegressor(),
                     'params': {
-                        'n_estimators': [100, 200, 300, 500],
-                        'max_depth': [3, 5, 7, 10, None],
-                        'min_samples_split': [2, 5, 10, 20],
-                        'min_samples_leaf': [1, 2, 4],
-                        'max_features': ['sqrt', 'log2', None],
-                        'bootstrap': [True, False],
-                        'criterion': ['squared_error', 'absolute_error', 'poisson'],
-                        'oob_score': [True, False]
+                        'n_estimators': [100, 200, 300],
+                        'max_depth': [3, 5, 7, None],
+                        'min_samples_split': [2, 5, 10]
                     }
                 }
             }
@@ -320,56 +312,35 @@ def show_train():
                 'Regresión Logística': {
                     'model': LogisticRegression(max_iter=1000),
                     'params': {
-                        'C': [0.001, 0.01, 0.1, 1.0, 10.0],
+                        'C': [0.1, 1.0, 10.0],
                         'penalty': ['l1', 'l2'],
-                        'solver': ['liblinear', 'saga'],
-                        'class_weight': [None, 'balanced'],
-                        'warm_start': [True, False],
-                        'random_state': [42],
-                        'tol': [1e-4, 1e-3, 1e-2]
+                        'solver': ['liblinear', 'saga']
                     }
                 },
                 'Árbol de Decisión': {
                     'model': DecisionTreeClassifier(),
                     'params': {
-                        'max_depth': [3, 5, 7, 10, 15, None],
-                        'min_samples_split': [2, 5, 10, 20],
-                        'min_samples_leaf': [1, 2, 4, 8],
-                        'criterion': ['gini', 'entropy', 'log_loss'],
-                        'splitter': ['best', 'random'],
-                        'max_features': ['sqrt', 'log2', None],
-                        'class_weight': [None, 'balanced'],
-                        'ccp_alpha': [0.0, 0.1, 0.2]
+                        'max_depth': [3, 5, 7, 10, None],
+                        'min_samples_split': [2, 5, 10],
+                        'min_samples_leaf': [1, 2, 4]
                     }
                 },
                 'Random Forest': {
                     'model': RandomForestClassifier(),
                     'params': {
-                        'n_estimators': [100, 200, 300, 500],
-                        'max_depth': [3, 5, 7, 10, None],
-                        'min_samples_split': [2, 5, 10, 20],
+                        'n_estimators': [100, 200, 300],
+                        'max_depth': [3, 5, 7, None],
+                        'min_samples_split': [2, 5, 10],
                         'min_samples_leaf': [1, 2, 4],
-                        'max_features': ['sqrt', 'log2', None],
-                        'bootstrap': [True, False],
-                        'criterion': ['gini', 'entropy', 'log_loss'],
-                        'class_weight': [None, 'balanced', 'balanced_subsample'],
-                        'oob_score': [True, False],
-                        'warm_start': [True, False]
+                        'criterion': ['gini', 'entropy']
                     }
                 },
                 'XGBoost': {
                     'model': xgb.XGBClassifier(),
                     'params': {
-                        'max_depth': [3, 5, 7, 9],
-                        'learning_rate': [0.01, 0.05, 0.1, 0.3],
-                        'n_estimators': [100, 200, 300, 500],
-                        'min_child_weight': [1, 3, 5],
-                        'gamma': [0, 0.1, 0.2],
-                        'subsample': [0.8, 0.9, 1.0],
-                        'colsample_bytree': [0.8, 0.9, 1.0],
-                        'reg_alpha': [0, 0.1, 0.5],
-                        'reg_lambda': [0.1, 1.0, 5.0],
-                        'scale_pos_weight': [1, 3, 5]
+                        'max_depth': [3, 5, 7],
+                        'learning_rate': [0.01, 0.1, 0.3],
+                        'n_estimators': [100, 200, 300]
                     }
                 }
             }
