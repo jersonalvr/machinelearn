@@ -5,20 +5,19 @@ def show_github():
     # Título de la sección
     st.markdown("### Repositorio de GitHub")
     
-    # HTML y CSS para un iframe responsivo
-    github_iframe = """
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-        <iframe 
-            src="https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf" 
-            style="position: absolute; top:0; left: 0; width: 100%; height: 100%;" 
-            frameborder="0" 
-            scrolling="yes">
-        </iframe>
-    </div>
+    # URL del PDF
+    pdf_url = "https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf"
+    
+    # URL para visualizar el PDF usando Google Docs Viewer
+    embed_url = f"https://docs.google.com/viewer?url={pdf_url}&embedded=true"
+    
+    # HTML para el iframe responsivo
+    github_iframe = f"""
+    <iframe src="{embed_url}" width="100%" height="600px" style="border: none;"></iframe>
     """
     
     # Renderizar el HTML responsivo
-    components.html(github_iframe, height=600, scrolling=True)
+    components.html(github_iframe, height=600)
     
     # Enlace directo como respaldo
     st.markdown(
