@@ -15,3 +15,6 @@ streamlit-navigation-bar==3.3.0
 supabase==2.10.0
 typing
 xgboost
+streamlit_shap
+shap
+matplotlib
