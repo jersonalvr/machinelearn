@@ -27,6 +27,30 @@ def load_model(uploaded_file):
         st.error(f"Error loading model: {str(e)}")
         return None
 
+def get_model_features(model):
+    """Extract feature names from the model if available."""
+    if hasattr(model, 'feature_names_in_'):
+        return list(model.feature_names_in_)
+    return None
+
+def align_features(X, model_features):
+    """Align input features with model's expected features."""
+    if model_features is None:
+        return X
+    
+    # Create a new DataFrame with the correct features in the correct order
+    missing_cols = set(model_features) - set(X.columns)
+    extra_cols = set(X.columns) - set(model_features)
+    
+    if missing_cols:
+        st.warning(f"Missing features: {missing_cols}. These will need to be provided.")
+        return None
+    
+    if extra_cols:
+        st.warning(f"Extra features detected: {extra_cols}. These will be ignored.")
+    
+    return X[model_features]
+
 def determine_problem_type(model):
     """Determine if the model is for classification or regression."""
     class_methods = ['predict_proba', 'classes_']
@@ -38,29 +62,59 @@ def generate_random_sample(X, y, sample_size=0.3):
     indices = np.random.randint(0, len(X), n_samples)
     return X.iloc[indices], y.iloc[indices]
 
-def evaluate_classification_model(model, X, y):
-    """Evaluate a classification model and return metrics."""
-    predictions = model.predict(X)
-    
-    return {
-        'accuracy': accuracy_score(y, predictions),
-        'confusion_matrix': confusion_matrix(y, predictions),
-        'classification_report': classification_report(y, predictions),
-        'predictions': predictions,
-        'true_values': y
-    }
-
 def evaluate_regression_model(model, X, y):
     """Evaluate a regression model and return metrics."""
-    predictions = model.predict(X)
+    # Get expected feature names from model
+    model_features = get_model_features(model)
     
-    return {
-        'mse': mean_squared_error(y, predictions),
-        'r2': r2_score(y, predictions),
-        'mape': mean_absolute_percentage_error(y, predictions) * 100,
-        'predictions': predictions,
-        'true_values': y
-    }
+    # Align features if needed
+    if model_features is not None:
+        X_aligned = align_features(X, model_features)
+        if X_aligned is None:
+            st.error("Cannot proceed with evaluation due to missing features.")
+            return None
+        X = X_aligned
+    
+    try:
+        predictions = model.predict(X)
+        
+        return {
+            'mse': mean_squared_error(y, predictions),
+            'r2': r2_score(y, predictions),
+            'mape': mean_absolute_percentage_error(y, predictions) * 100,
+            'predictions': predictions,
+            'true_values': y
+        }
+    except Exception as e:
+        st.error(f"Error during prediction: {str(e)}")
+        return None
+
+def evaluate_classification_model(model, X, y):
+    """Evaluate a classification model and return metrics."""
+    # Get expected feature names from model
+    model_features = get_model_features(model)
+    
+    # Align features if needed
+    if model_features is not None:
+        X_aligned = align_features(X, model_features)
+        if X_aligned is None:
+            st.error("Cannot proceed with evaluation due to missing features.")
+            return None
+        X = X_aligned
+    
+    try:
+        predictions = model.predict(X)
+        
+        return {
+            'accuracy': accuracy_score(y, predictions),
+            'confusion_matrix': confusion_matrix(y, predictions),
+            'classification_report': classification_report(y, predictions),
+            'predictions': predictions,
+            'true_values': y
+        }
+    except Exception as e:
+        st.error(f"Error during prediction: {str(e)}")
+        return None
 
 def plot_regression_results(results):
     """Create visualization for regression results."""
@@ -184,6 +238,11 @@ def show_test():
     if model is None:
         return
     
+    # Get model features
+    model_features = get_model_features(model)
+    if model_features:
+        st.write("Model expects these features:", model_features)
+    
     # Determine problem type
     problem_type = determine_problem_type(model)
     st.write(f"Tipo de modelo detectado: **{problem_type}**")
@@ -198,11 +257,20 @@ def show_test():
     # Feature selection
     numeric_cols = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
     
-    feature_cols = st.multiselect(
-        "Seleccionar variables predictoras (X):",
-        numeric_cols,
-        default=st.session_state.get('feature_cols', [])
-    )
+    if model_features:
+        # Pre-select features that match the model's expected features
+        default_features = [col for col in model_features if col in numeric_cols]
+        feature_cols = st.multiselect(
+            "Seleccionar variables predictoras (X):",
+            numeric_cols,
+            default=default_features
+        )
+    else:
+        feature_cols = st.multiselect(
+            "Seleccionar variables predictoras (X):",
+            numeric_cols,
+            default=st.session_state.get('feature_cols', [])
+        )
     
     available_targets = [col for col in data.columns if col not in feature_cols]
     target_col = st.selectbox(
