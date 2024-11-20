@@ -17,6 +17,10 @@ from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classi
 import io
 import google.generativeai as genai
 from time import sleep
+from sklearn.svm import SVC, SVR
+from sklearn.preprocessing import LabelEncoder
+import shap
+from streamlit_shap import st_shap
 
 def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name):
     with col:
@@ -490,6 +494,34 @@ def show_train():
                         'max_depth': [3, 5, 7, None],
                         'min_samples_split': [2, 5, 10]
                     }
+                },
+                'Support Vector Machine (Regressor)': {
+                    'model': lambda rs: SVR(),
+                    'params': {
+                        'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+                        'C': [0.1, 1, 10, 100],
+                        'epsilon': [0.1, 0.2, 0.5],
+                        'gamma': ['scale', 'auto']
+                    }
+                },
+                'XGBoost': {
+                    'model': lambda rs: xgb.XGBRegressor(
+                        tree_method='hist',
+                        device='cuda:0',
+                        enable_categorical=True,
+                        random_state=rs
+                    ),
+                    'params': {
+                        'n_estimators': [100, 200, 300, 500],
+                        'max_depth': [3, 5, 7, 9],
+                        'learning_rate': [0.01, 0.05, 0.1, 0.3],
+                        'subsample': [0.8, 0.9, 1.0],
+                        'colsample_bytree': [0.8, 0.9, 1.0],
+                        'min_child_weight': [1, 3, 5],
+                        'gamma': [0, 0.1, 0.2],
+                        'reg_alpha': [0, 0.1, 0.5],
+                        'reg_lambda': [0.1, 1.0, 5.0]
+                    }
                 }
             }
         else:
@@ -520,12 +552,32 @@ def show_train():
                         'criterion': ['gini', 'entropy']
                     }
                 },
-                'XGBoost': {
-                    'model': xgb.XGBClassifier(),
+                'Support Vector Machine (Classifier)': {
+                    'model': lambda rs: SVC(random_state=rs),
                     'params': {
-                        'max_depth': [3, 5, 7],
-                        'learning_rate': [0.01, 0.1, 0.3],
-                        'n_estimators': [100, 200, 300]
+                        'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+                        'C': [0.1, 1, 10, 100],
+                        'gamma': ['scale', 'auto'],
+                        'class_weight': [None, 'balanced']
+                    }
+                },
+                'XGBoost': {
+                    'model': lambda rs: xgb.XGBClassifier(
+                        tree_method='hist',
+                        device='cuda:0',
+                        enable_categorical=True,
+                        eval_metric='logloss',
+                        random_state=rs
+                    ),
+                    'params': {
+                        'n_estimators': [100, 200, 300, 500],
+                        'max_depth': [3, 5, 7, 9],
+                        'learning_rate': [0.01, 0.05, 0.1, 0.3],
+                        'subsample': [0.8, 0.9, 1.0],
+                        'colsample_bytree': [0.8, 0.9, 1.0],
+                        'min_child_weight': [1, 3, 5],
+                        'gamma': [0, 0.1, 0.2],
+                        'scale_pos_weight': [1, 3, 5]
                     }
                 }
             }
