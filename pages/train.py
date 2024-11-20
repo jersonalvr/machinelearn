@@ -79,6 +79,191 @@ def show_model_results(model_name, problem_type, y_test, col):
             else:
                 st.write("R² Score:", r2_score(y_test, results['y_pred']))
                 st.write("MSE:", mean_squared_error(y_test, results['y_pred']))
+
+            # Add SHAP Analysis section
+            st.write("---")
+            
+            if st.button("Mostrar Análisis SHAP", key=f"shap_button_{model_name}"):
+                try:
+                    with st.spinner("Calculando valores SHAP..."):
+                        model = results['model']
+                        X = st.session_state.prepared_data[st.session_state.feature_cols]
+                        
+                        # Para modelos Pipeline, extraemos el modelo real y aplicamos el escalado a X
+                        if hasattr(model, 'named_steps'):
+                            if 'scaler' in model.named_steps:
+                                X_transformed = pd.DataFrame(
+                                    model.named_steps['scaler'].transform(X),
+                                    columns=X.columns,
+                                    index=X.index
+                                )
+                            else:
+                                X_transformed = X
+                            
+                            # Obtener el modelo real (regressor o classifier)
+                            if 'regressor' in model.named_steps:
+                                actual_model = model.named_steps['regressor']
+                            elif 'classifier' in model.named_steps:
+                                actual_model = model.named_steps['classifier']
+                            else:
+                                actual_model = model
+                        else:
+                            X_transformed = X
+                            actual_model = model
+                        
+                        # Configurar el explainer según el tipo de modelo
+                        if isinstance(actual_model, (LinearRegression, LogisticRegression)):
+                            # Para modelos lineales, usamos un enfoque específico
+                            if isinstance(actual_model, LinearRegression):
+                                # Para regresión lineal, usamos LinearExplainer
+                                explainer = shap.LinearExplainer(actual_model, X_transformed)
+                                shap_values = explainer(X_transformed)
+                            else:
+                                # Para regresión logística
+                                explainer = shap.LinearExplainer(actual_model, X_transformed)
+                                shap_values = explainer(X_transformed)
+                        elif 'XGBoost' in model_name:
+                            explainer = shap.TreeExplainer(actual_model)
+                            shap_values = explainer(X_transformed[:100])
+                        elif any(name in model_name for name in ['Random Forest', 'Árbol de Decisión']):
+                            explainer = shap.TreeExplainer(actual_model)
+                            shap_values = explainer(X_transformed[:100])
+                        else:
+                            # Para modelos SVM y otros
+                            background = shap.sample(X_transformed, 100, random_state=42)
+                            explainer = shap.KernelExplainer(
+                                actual_model.predict, 
+                                background,
+                                feature_names=X_transformed.columns.tolist()
+                            )
+                            shap_values = explainer.shap_values(X_transformed[:100])
+                            if isinstance(shap_values, list):
+                                shap_values = shap_values[0]
+
+                        # Contenedor para controles interactivos
+                        control_col1, control_col2 = st.columns(2)
+                        
+                        with control_col1:
+                            num_features = len(X.columns)
+                            if num_features == 1:
+                                max_display = 1
+                                st.write("Número de características a mostrar: 1")
+                            else:
+                                max_display = st.slider(
+                                    "Número de características a mostrar:",
+                                    min_value=1,
+                                    max_value=num_features,
+                                    value=min(10, num_features),
+                                    key=f"max_display_{model_name}"
+                                )
+                        
+                        with control_col2:
+                            sample_size = min(100, len(X))
+                            sample_index = st.selectbox(
+                                "Seleccionar muestra para análisis detallado:",
+                                range(sample_size),
+                                format_func=lambda x: f"Muestra {x + 1}",
+                                key=f"sample_index_{model_name}"
+                            )
+
+                        # Contenedor para los gráficos SHAP
+                        plot_container = st.container()
+                        with plot_container:
+                            plot_width = 380
+                            # Resumen de Impacto de Variables (Beeswarm plot)
+                            st.write("#### Resumen de Impacto de Variables")
+                            if isinstance(shap_values, np.ndarray):
+                                # For regular shap values array
+                                st_shap(shap.plots.beeswarm(shap_values))
+                            else:
+                                # For Shap objects (like from TreeExplainer)
+                                st_shap(shap.plots.beeswarm(shap_values))
+
+                            # Waterfall plot para muestra específica
+                            st.write(f"#### Análisis Detallado de Muestra {sample_index + 1}")
+                            if isinstance(shap_values, np.ndarray):
+                                explanation = shap.Explanation(
+                                    values=shap_values[sample_index],
+                                    base_values=explainer.expected_value if hasattr(explainer, 'expected_value') else 0,
+                                    data=X_transformed.iloc[sample_index].values,
+                                    feature_names=X_transformed.columns.tolist()
+                                )
+                                st_shap(shap.plots.waterfall(explanation))
+                            else:
+                                st_shap(shap.plots.waterfall(shap_values[sample_index]))
+
+                            # Dependence plot para la variable más importante
+                            st.write("#### Gráfico de Dependencia")
+                            if isinstance(shap_values, np.ndarray):
+                                most_important_feature = X_transformed.columns[np.abs(shap_values).mean(0).argmax()]
+                                st_shap(shap.plots.scatter(shap_values[:, X_transformed.columns.get_loc(most_important_feature)]))
+                            else:
+                                feature_importance = np.abs(shap_values.values if hasattr(shap_values, 'values') else shap_values).mean(0)
+                                most_important_feature = X_transformed.columns[feature_importance.argmax()]
+                                st_shap(shap.plots.scatter(shap_values[:, X_transformed.columns.get_loc(most_important_feature)]))
+
+                            # Force plot
+                            st.write("#### Visualización de Fuerza (Force Plot)")
+                            try:
+                                if isinstance(shap_values, np.ndarray):
+                                    expected_value = (
+                                        explainer.expected_value[0] 
+                                        if isinstance(explainer.expected_value, list) 
+                                        else explainer.expected_value
+                                    )
+                                    st_shap(shap.plots.force(
+                                        base_value=expected_value,
+                                        shap_values=shap_values[sample_index],
+                                        features=X_transformed.iloc[sample_index],
+                                        feature_names=X_transformed.columns.tolist()
+                                    ))
+                                else:
+                                    st_shap(shap.plots.force(shap_values[sample_index]))
+                            except Exception as e:
+                                st.warning(f"No se pudo generar el force plot: {str(e)}")
+
+                            # Decision plot para modelos de árbol
+                            if any(name in model_name for name in ['Random Forest', 'Árbol de Decisión', 'XGBoost']):
+                                st.write("#### Gráfico de Decisión")
+                                try:
+                                    st_shap(shap.plots.decision(
+                                        base_value=explainer.expected_value,
+                                        shap_values=shap_values.values if hasattr(shap_values, 'values') else shap_values,
+                                        features=X_transformed
+                                    ))
+                                except Exception as e:
+                                    st.warning(f"No se pudo generar el decision plot: {str(e)}")
+
+                            # Feature importance plot
+                            st.write("#### Importancia de Variables")
+                            if hasattr(shap_values, 'values'):
+                                feature_importance = np.abs(shap_values.values).mean(0)
+                            else:
+                                feature_importance = np.abs(shap_values).mean(0)
+                            
+                            importance_df = pd.DataFrame({
+                                'feature': X_transformed.columns,
+                                'importance': feature_importance
+                            }).sort_values('importance', ascending=False)
+                            
+                            fig = px.bar(
+                                importance_df.head(max_display),
+                                x='importance',
+                                y='feature',
+                                orientation='h',
+                                title='SHAP Feature Importance'
+                            )
+                            
+                            fig.update_layout(
+                                width=plot_width,
+                                height=400,
+                                margin=dict(l=20, r=20, t=40, b=20)
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+
+                except Exception as e:
+                    st.error(f"Error al calcular valores SHAP: {str(e)}")
+                    st.exception(e)
             
             # Parameters explanation section
             st.write("---")
