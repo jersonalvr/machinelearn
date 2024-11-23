@@ -22,6 +22,19 @@ from sklearn.preprocessing import LabelEncoder
 import shap
 from streamlit_shap import st_shap
 
+def create_xgb_model(random_state):
+    return xgb.XGBRegressor(
+        enable_categorical=True,
+        random_state=random_state
+    )
+
+def create_xgb_classifier(random_state):
+    return xgb.XGBClassifier(
+        enable_categorical=True,
+        eval_metric='logloss',
+        random_state=random_state
+    )
+    
 def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name):
     with col:
         # Verificar si el modelo ya está entrenado
@@ -32,9 +45,13 @@ def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col,
 
         # Obtener el número de folds del estado de la sesión
         n_folds = st.session_state.get('n_folds', 5)
-
+        # Si el modelo es una función, llamarla con random_state
+        if callable(model_info['model']):
+            model = model_info['model'](random_state)
+        else:
+            model = model_info['model']
         grid_search = GridSearchCV(
-            model_info['model'],
+            model,
             model_info['params'],
             cv=n_folds,
             n_jobs=-1
@@ -505,12 +522,7 @@ def show_train():
                     }
                 },
                 'XGBoost': {
-                    'model': lambda rs: xgb.XGBRegressor(
-                        tree_method='hist',
-                        device='cuda:0',
-                        enable_categorical=True,
-                        random_state=rs
-                    ),
+                    'model': create_xgb_model,
                     'params': {
                         'n_estimators': [100, 200, 300, 500],
                         'max_depth': [3, 5, 7, 9],
@@ -562,13 +574,7 @@ def show_train():
                     }
                 },
                 'XGBoost': {
-                    'model': lambda rs: xgb.XGBClassifier(
-                        tree_method='hist',
-                        device='cuda:0',
-                        enable_categorical=True,
-                        eval_metric='logloss',
-                        random_state=rs
-                    ),
+                    'model': create_xgb_classifier,
                     'params': {
                         'n_estimators': [100, 200, 300, 500],
                         'max_depth': [3, 5, 7, 9],
