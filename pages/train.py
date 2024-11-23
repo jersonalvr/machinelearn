@@ -35,7 +35,7 @@ def create_xgb_classifier(random_state):
         random_state=random_state
     )
     
-def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name):
+def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name, random_state=random_state):
     with col:
         # Verificar si el modelo ya está entrenado
         if ('trained_models' in st.session_state and 
@@ -151,7 +151,7 @@ def show_model_results(model_name, problem_type, y_test, col):
                             shap_values = explainer(X_transformed[:100])
                         else:
                             # Para modelos SVM y otros
-                            background = shap.sample(X_transformed, 100, random_state=42)
+                            background = shap.sample(X_transformed, 100, random_state=random_state)
                             explainer = shap.KernelExplainer(
                                 actual_model.predict, 
                                 background,
@@ -476,7 +476,7 @@ def show_train():
                             max_class_size = y.value_counts().max()
                             X, y = resample(X, y, n_samples=max_class_size*2, stratify=y)
                         else:  # SMOTE
-                            smote = SMOTE(random_state=42)
+                            smote = SMOTE(random_state=random_state)
                             X, y = smote.fit_resample(X, y)
                     st.success("Balanceo completado!")
 
@@ -513,7 +513,7 @@ def show_train():
                     }
                 },
                 'Support Vector Machine (Regressor)': {
-                    'model': lambda random_state: SVR(),
+                    'model': lambda rs: SVR(),
                     'params': {
                         'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                         'C': [0.1, 1, 10, 100],
@@ -522,7 +522,12 @@ def show_train():
                     }
                 },
                 'XGBoost': {
-                    'model': create_xgb_model,
+                    'model': lambda rs: xgb.XGBRegressor(
+                        tree_method='hist',
+                        device='cuda:0',
+                        enable_categorical=True,
+                        random_state=rs
+                    ),
                     'params': {
                         'n_estimators': [100, 200, 300, 500],
                         'max_depth': [3, 5, 7, 9],
@@ -565,7 +570,7 @@ def show_train():
                     }
                 },
                 'Support Vector Machine (Classifier)': {
-                    'model': lambda random_state: SVC(),
+                    'model': lambda rs: SVC(random_state=rs),
                     'params': {
                         'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                         'C': [0.1, 1, 10, 100],
@@ -574,7 +579,13 @@ def show_train():
                     }
                 },
                 'XGBoost': {
-                    'model': create_xgb_classifier,
+                    'model': lambda rs: xgb.XGBClassifier(
+                        tree_method='hist',
+                        device='cuda:0',
+                        enable_categorical=True,
+                        eval_metric='logloss',
+                        random_state=rs
+                    ),
                     'params': {
                         'n_estimators': [100, 200, 300, 500],
                         'max_depth': [3, 5, 7, 9],
@@ -639,7 +650,8 @@ def show_train():
                         model_options[model_name],
                         problem_type,
                         cols[i],
-                        model_name
+                        model_name,
+                        random_state
                     )
                     show_model_results(model_name, problem_type, y_test, cols[i])
 
