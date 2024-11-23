@@ -35,7 +35,7 @@ def create_xgb_classifier(random_state):
         random_state=random_state
     )
     
-def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name, random_state=random_state):
+def train_model(X_train, X_test, y_train, y_test, model_info, problem_type, col, model_name, random_state):
     with col:
         # Verificar si el modelo ya está entrenado
         if ('trained_models' in st.session_state and 
