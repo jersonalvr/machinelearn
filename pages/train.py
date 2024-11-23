@@ -513,7 +513,7 @@ def show_train():
                     }
                 },
                 'Support Vector Machine (Regressor)': {
-                    'model': lambda rs: SVR(),
+                    'model': lambda random_state: SVR(),
                     'params': {
                         'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                         'C': [0.1, 1, 10, 100],
@@ -565,7 +565,7 @@ def show_train():
                     }
                 },
                 'Support Vector Machine (Classifier)': {
-                    'model': lambda rs: SVC(random_state=rs),
+                    'model': lambda random_state: SVC(),
                     'params': {
                         'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
                         'C': [0.1, 1, 10, 100],
