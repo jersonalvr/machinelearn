@@ -631,6 +631,29 @@ def show_prepare():
         
         if corr_variables:
             try:
+                # -------------------------------------------
+                # NUEVO: Detección de Outliers y Visualización
+                # -------------------------------------------
+                for var in corr_variables:
+                    # Cálculo de Q1, Q3 e IQR
+                    Q1 = prepare[var].quantile(0.25)
+                    Q3 = prepare[var].quantile(0.75)
+                    IQR = Q3 - Q1
+                    lower_bound = Q1 - 1.5 * IQR
+                    upper_bound = Q3 + 1.5 * IQR
+                    
+                    # Identificación de outliers
+                    outliers = prepare[(prepare[var] < lower_bound) | (prepare[var] > upper_bound)][var]
+                    num_outliers = outliers.shape[0]
+                    
+                    # Mostrar advertencia si hay outliers
+                    if num_outliers > 0:
+                        st.warning(f"⚠️ La variable **{var}** tiene {num_outliers} datos atípicos (outliers) detectados.")
+                    
+                    # Mostrar boxplot usando Plotly
+                    fig_box = px.box(prepare, y=var, title=f'Boxplot de {var}')
+                    st.plotly_chart(fig_box, use_container_width=True)
+                
                 # Calcular y mostrar la matriz de correlación
                 corr_matrix = prepare[corr_variables].corr(method='pearson')
                 
