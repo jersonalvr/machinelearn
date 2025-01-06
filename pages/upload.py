@@ -7,6 +7,7 @@ from typing import Optional, Dict, List
 import importlib.util
 import google.generativeai as genai
 from supabase import create_client
+import re
 
 def show_upload():
     def check_package(package_name: str) -> bool:
