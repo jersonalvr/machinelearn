@@ -89,13 +89,31 @@ def show_upload():
         except Exception as e:
             st.error(f"Error al cargar el archivo: {str(e)}")
             return None
-
+            
+    def convert_to_raw_github_url(url: str) -> str:
+        """Convierte una URL de GitHub en su versión 'raw'"""
+        # Patrón para URLs de GitHub
+        github_pattern = r'https://github\.com/([^/]+/[^/]+)/blob/([^/]+/.*)'
+        
+        if match := re.match(github_pattern, url):
+            # Construir la URL raw
+            return f'https://raw.githubusercontent.com/{match.group(1)}/{match.group(2)}'
+        return url
+    
     def load_url_file(url: str) -> Optional[pd.DataFrame]:
         """Carga un archivo desde una URL detectando automáticamente el formato"""
         try:
-            response = requests.get(url)
+            # Convertir a URL raw si es una URL de GitHub
+            raw_url = convert_to_raw_github_url(url)
+            
+            # Configurar headers para simular un navegador
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            response = requests.get(raw_url, headers=headers, verify=True)
             if response.status_code != 200:
-                raise Exception("Error al descargar el archivo")
+                raise Exception(f"Error al descargar el archivo (Status code: {response.status_code})")
             
             content = io.BytesIO(response.content)
             
